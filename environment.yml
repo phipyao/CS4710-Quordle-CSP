@@ -1,0 +1,7 @@
+name: quordle-game
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+      - tkinter
+      - pathlib
