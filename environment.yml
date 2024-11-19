@@ -1,6 +1,6 @@
-name: quordle-game
+name: CS4710-Quordle-CSP
 dependencies:
-  - python=3.9
+  - python=3.11.8
   - pip
   - pip:
       - tkinter
