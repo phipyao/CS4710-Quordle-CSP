@@ -13,7 +13,7 @@ def load_words(file_path):
 
 
 # Load solutions and valid words
-solutions = load_words("words.txt")
+solutions = load_words("solutions.txt")
 validWords = load_words("valid_words.txt")  # Include solutions as valid guesses
 
 class QuordleGame:
