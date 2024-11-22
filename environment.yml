@@ -3,5 +3,5 @@ dependencies:
   - python=3.11.8
   - pip
   - pip:
-      - tkinter
+      - tk
       - pathlib
