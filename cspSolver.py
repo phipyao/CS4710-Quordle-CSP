@@ -62,6 +62,33 @@ class CSPQuordleSolver:
                 return result
 
         return None
+    
+    def generate_next_guess(self):
+        """
+        Generate the next guess based on the CSP's current state.
+
+        Returns:
+            str: A valid 5-letter word guess.
+        """
+        # Select the variable with the smallest domain (MRV heuristic)
+        min_var = None
+        min_domain_size = float('inf')
+        
+        for var in self.variables:
+            if len(self.domains[var]) > 0 and len(self.domains[var]) < min_domain_size:
+                min_var = var
+                min_domain_size = len(self.domains[var])
+        
+        # If all domains are empty, we cannot generate a guess
+        if min_var is None:
+            raise ValueError("No valid guesses remaining in any domain!")
+
+        # Choose a word from the selected variable's domain
+        # For simplicity, pick the first word in the domain
+        guess = next(iter(self.domains[min_var]))
+
+        return guess
+
 
     def get_feedback(self, variable, guess):
         """Simulate feedback for a guess."""
