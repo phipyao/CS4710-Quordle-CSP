@@ -174,5 +174,6 @@ class QuordleGame:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    solver = CSPQuordleSolver(target_words=random.sample(solutions, 4), valid_words=validWords)
     game = QuordleGame(root)
     root.mainloop()
