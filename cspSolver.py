@@ -7,6 +7,7 @@ class CSPQuordleSolver:
         self.constraints = defaultdict(list)  # No initial binary constraints
         self.feedback = {var: [] for var in self.variables}  # Store feedback per word
         self.target_words = target_words  # Target words for simulation
+        self.used_guesses = set()  # Track already used guesses
 
     def is_consistent(self, variable, value, feedback):
         """Check if a value is consistent with the given feedback."""
@@ -63,6 +64,39 @@ class CSPQuordleSolver:
 
         return None
     
+    # def generate_next_guess(self):
+    #     """
+    #     Generate the next guess based on the CSP's current state.
+
+    #     Returns:
+    #         str: A valid 5-letter word guess.
+    #     """
+    #     # Select the variable with the smallest domain (MRV heuristic)
+    #     min_var = None
+    #     min_domain_size = float('inf')
+        
+    #     for var in self.variables:
+    #         if len(self.domains[var]) > 0 and len(self.domains[var]) < min_domain_size:
+    #             min_var = var
+    #             min_domain_size = len(self.domains[var])
+        
+    #     # If all domains are empty, we cannot generate a guess
+    #     # if min_var is None:
+    #     #     raise ValueError("No valid guesses remaining in any domain!")
+    #     if min_var is None:
+    #         # Fallback: Random guess from all valid words
+    #         guess = random.choice(list(set(valid_words) - self.used_guesses))
+
+    #     # Choose a word from the selected variable's domain
+    #     # For simplicity, pick the first word in the domain
+    #     guess = next(iter(self.domains[min_var]))
+
+    #     while guess in self.used_guesses:
+    #         guess = next(iter(self.domains[min_var]))  # Select the next word in the domain
+    #     self.used_guesses.add(guess)
+
+    #     return guess
+
     def generate_next_guess(self):
         """
         Generate the next guess based on the CSP's current state.
@@ -73,21 +107,35 @@ class CSPQuordleSolver:
         # Select the variable with the smallest domain (MRV heuristic)
         min_var = None
         min_domain_size = float('inf')
-        
+
         for var in self.variables:
             if len(self.domains[var]) > 0 and len(self.domains[var]) < min_domain_size:
                 min_var = var
                 min_domain_size = len(self.domains[var])
-        
-        # If all domains are empty, we cannot generate a guess
-        if min_var is None:
-            raise ValueError("No valid guesses remaining in any domain!")
 
-        # Choose a word from the selected variable's domain
-        # For simplicity, pick the first word in the domain
-        guess = next(iter(self.domains[min_var]))
+        # If no valid domains exist, fallback to a random word from unused valid words
+        if min_var is None or all(len(self.domains[var]) == 0 for var in self.variables):
+            fallback_guess = list(set(validWords) - self.used_guesses)
+            if not fallback_guess:
+                raise ValueError("No valid guesses remaining!")
+            guess = random.choice(fallback_guess)
+        else:
+            # Use domain intersection to find a common valid guess for all frames
+            combined_domain = set.intersection(*[self.domains[var] for var in self.variables if len(self.domains[var]) > 0])
+
+            # If the combined domain is empty, fallback to the smallest domain
+            if combined_domain:
+                guess = next(iter(combined_domain))
+            else:
+                guess = next(iter(self.domains[min_var]))
+
+        # Avoid repeating guesses
+        while guess in self.used_guesses:
+            guess = random.choice(list(set(validWords) - self.used_guesses))
+        self.used_guesses.add(guess)
 
         return guess
+
 
 
     def get_feedback(self, variable, guess):
