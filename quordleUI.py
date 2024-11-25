@@ -70,12 +70,16 @@ class QuordleGame:
             word_feedback = []
             target_word = self.target_words[frame_index]
             for i, char in enumerate(guess):
+                if i >= len(target_word):
+                    raise ValueError(f"Target word is too short: '{target_word}'")
                 if char == target_word[i]:
                     word_feedback.append((char, "green"))
                 elif char in target_word:
                     word_feedback.append((char, "yellow"))
                 else:
                     word_feedback.append((char, "grey"))
+            if len(word_feedback) != 5:
+                raise ValueError(f"Malformed feedback for frame {frame_index}: {word_feedback}")
             feedback.append(word_feedback)
         return feedback
 
@@ -174,6 +178,6 @@ class QuordleGame:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    solver = CSPQuordleSolver(target_words=random.sample(solutions, 4), valid_words=validWords)
+    solver = solver.CSPQuordleSolver(target_words=random.sample(solutions, 4), valid_words=validWords)
     game = QuordleGame(root)
     root.mainloop()

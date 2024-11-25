@@ -11,6 +11,11 @@ class CSPQuordleSolver:
 
     def is_consistent(self, variable, value, feedback):
         """Check if a value is consistent with the given feedback."""
+        # print("DEBUG: feedback =", feedback)  # Add this line
+        if isinstance(feedback[0], list):
+            feedback = [item for sublist in feedback for item in sublist]
+        if len(value) != len(feedback):
+            raise ValueError(f"Inconsistent lengths: value='{value}' ({len(value)}), feedback={feedback} ({len(feedback)})")
         for i, (char, status) in enumerate(feedback):
             if status == "green" and value[i] != char:
                 return False
@@ -35,7 +40,9 @@ class CSPQuordleSolver:
             x, y = arcs.pop(0)
             revised = False
             for word in set(self.domains[x]):
-                if not any(self.is_consistent(y, other_word, self.feedback[x]) for other_word in self.domains[y]):
+                if len(word) != 5:
+                    raise ValueError(f"Invalid word length in domain for {x}: '{word}'")
+                if not any(self.is_consistent(y, other_word, self.feedback[y]) for other_word in self.domains[y]):
                     self.domains[x].remove(word)
                     revised = True
             if revised:
@@ -171,7 +178,10 @@ class CSPQuordleSolver:
     
     def update_constraints(self, feedback):
         for var, word_feedback in zip(self.variables, feedback):
-            self.feedback[var].append(word_feedback)
+            if isinstance(word_feedback, list) and isinstance(word_feedback[0], tuple):
+                self.feedback[var].append(word_feedback)
+            else:
+                raise ValueError(f"Unexpected feedback structure: {word_feedback}")
         self.enforce_node_consistency()
         self.enforce_arc_consistency()
 
