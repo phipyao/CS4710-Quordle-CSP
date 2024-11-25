@@ -93,7 +93,12 @@ class CSPQuordleSolver:
         self.enforce_node_consistency()
         self.enforce_arc_consistency()
         return self.backtracking_search()
-
+    
+    def update_constraints(self, feedback):
+        for var, word_feedback in zip(self.variables, feedback):
+            self.feedback[var].append(word_feedback)
+        self.enforce_node_consistency()
+        self.enforce_arc_consistency()
 
 # Example Integration with UI
 if __name__ == "__main__":

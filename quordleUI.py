@@ -3,6 +3,8 @@ from tkinter import messagebox
 import random
 from pathlib import Path
 
+import cspSolver as solver
+
 # Load words from text files
 def load_words(file_path):
     base_dir = Path(__file__).parent
@@ -61,8 +63,46 @@ class QuordleGame:
 
         return cells
 
+# method to give feedback to csp solver instance
+    def get_feedback_for_csp(self, guess):
+        feedback = []
+        for frame_index, frame in enumerate(self.frames):
+            word_feedback = []
+            target_word = self.target_words[frame_index]
+            for i, char in enumerate(guess):
+                if char == target_word[i]:
+                    word_feedback.append((char, "green"))
+                elif char in target_word:
+                    word_feedback.append((char, "yellow"))
+                else:
+                    word_feedback.append((char, "grey"))
+            feedback.append(word_feedback)
+        return feedback
+
+# old submit_guess method
+    # def submit_guess(self):
+    #     guess = self.guess_entry.get().strip().lower()
+    #     if len(guess) != 5:
+    #         messagebox.showerror("Error", "Guess must be a 5-letter word.")
+    #         return
+
+    #     if guess not in validWords:
+    #         messagebox.showerror("Error", "Guess is not in the word list.")
+    #         return
+
+    #     self.update_grid(guess)
+    #     self.guess_entry.delete(0, tk.END)
+
+    #     if self.current_row == 6:
+    #         messagebox.showinfo("Game Over", "You are out of attempts!")
+    #         return
+
+# modified submit_guess method for csp solver
     def submit_guess(self):
-        guess = self.guess_entry.get().strip().lower()
+        # Generate a guess from the CSP solver
+        guess = solver.generate_next_guess()  # Replace manual input with CSP-generated guess
+
+        # Call the existing submit_guess logic to handle feedback
         if len(guess) != 5:
             messagebox.showerror("Error", "Guess must be a 5-letter word.")
             return
@@ -71,12 +111,19 @@ class QuordleGame:
             messagebox.showerror("Error", "Guess is not in the word list.")
             return
 
+        # Update the game UI
         self.update_grid(guess)
         self.guess_entry.delete(0, tk.END)
 
+        # Pass feedback to the CSP solver
+        feedback = self.get_feedback_for_csp(guess)
+        solver.update_constraints(feedback)
+
+        # Check if the game is over
         if self.current_row == 6:
             messagebox.showinfo("Game Over", "You are out of attempts!")
             return
+
 
     def update_grid(self, guess):
         for frame_index, frame in enumerate(self.frames):
