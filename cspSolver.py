@@ -1,108 +1,88 @@
 from collections import defaultdict
+from pathlib import Path
+import random
+# Load words from text files
+def load_words(file_path):
+    base_dir = Path(__file__).parent
+    file_address = base_dir / file_path
+    
+    with open(file_address, 'r') as file:
+        return [line.strip().lower() for line in file if line.strip()]
+
+
+# Load solutions and valid words
+solutions = load_words("solutions.txt")
+validWords = load_words("solutions.txt")
 
 class CSPQuordleSolver:
-    def __init__(self, target_words, valid_words):
-        self.variables = [f"word{i}" for i in range(4)]  # Four words to guess
-        self.domains = {var: set(valid_words) for var in self.variables}  # All valid words
+    def __init__(self):
+        self.domains = {var: set(validWords) for var in range(4)}  # All valid words
         self.constraints = defaultdict(list)  # No initial binary constraints
-        self.feedback = {var: [] for var in self.variables}  # Store feedback per word
-        self.target_words = target_words  # Target words for simulation
+        self.feedback = {var: [] for var in range(4)}  # Store feedback per word
+        self.used_guesses = set()  # Track already used guesses
+    
+    def generate_next_guess(self):
+        if len(self.used_guesses) == 0:
+            guess = random.choice(list(set(validWords)))
+        else:
+            # Use domain intersection to find a common valid guess for all frames
+            
+            # Find the intersection of all domains (words that appear in all domains)
+            word_count = defaultdict(int)
 
-    def is_consistent(self, variable, value, feedback):
-        """Check if a value is consistent with the given feedback."""
-        for i, (char, status) in enumerate(feedback):
-            if status == "green" and value[i] != char:
-                return False
-            if status == "yellow" and (value[i] == char or char not in value):
-                return False
-            if status == "grey" and char in value:
-                return False
-        return True
+            # Count how many domains each word appears in
+            for domain in self.domains.values():
+                for word in domain:
+                    word_count[word] += 1
 
-    def enforce_node_consistency(self):
-        """Prune domains based on node consistency."""
-        for var in self.variables:
-            self.domains[var] = {
-                word for word in self.domains[var]
-                if all(self.is_consistent(var, word, feedback) for feedback in self.feedback[var])
+            # Find the maximum number of domains a word appears in
+            max_domains = max(word_count.values(), default=0)
+
+            # Collect all words that appear in the maximum number of domains
+            most_common_words = [word for word, count in word_count.items() if count == max_domains]
+
+            # Randomly select a word from the most common words
+            guess = random.choice(most_common_words) if most_common_words else random.choice(list(set(validWords)))
+
+        # Remove the guess from the domains
+        for i in range(4):
+            if guess in self.domains[i]:
+                self.domains[i].remove(guess)
+        self.used_guesses.add(guess)
+        return guess
+    
+    def update_constraints(self, feedback):
+
+        """Prune domains based on node and arc consistency."""
+
+        # Iterate over each feedback (assuming feedback is a list of lists for each word)
+        for i in range(4):
+            grey_letters = {char for char, status in feedback[i] if status == 'grey'}
+            yellow_constraints = [(char, pos) for pos, (char, status) in enumerate(feedback[i]) if status == 'yellow']
+            green_constraints = [(char, pos) for pos, (char, status) in enumerate(feedback[i]) if status == 'green']
+
+            # Prune based on grey letters
+            self.domains[i] = {
+                word for word in self.domains[i]
+                if not any(letter in grey_letters for letter in word)
             }
 
-    def enforce_arc_consistency(self):
-        """Prune domains using arc consistency."""
-        arcs = [(x, y) for x in self.variables for y in self.variables if x != y]
-        while arcs:
-            x, y = arcs.pop(0)
-            revised = False
-            for word in set(self.domains[x]):
-                if not any(self.is_consistent(y, other_word, self.feedback[x]) for other_word in self.domains[y]):
-                    self.domains[x].remove(word)
-                    revised = True
-            if revised:
-                for z in self.variables:
-                    if z != x:
-                        arcs.append((z, x))
+            # Prune based on yellow letters
+            self.domains[i] = {
+                word for word in self.domains[i]
+                if all(
+                    word[pos] != char and char in word for char, pos in yellow_constraints
+                ) and all(
+                    word.count(char) >= 1 for char, pos in yellow_constraints
+                )
+            }
 
-    def backtracking_search(self, assignment={}):
-        """Backtracking algorithm to find solutions."""
-        if len(assignment) == len(self.variables):
-            return assignment
+            # Prune based on green letters
+            self.domains[i] = {
+                word for word in self.domains[i]
+                if all(word[pos] == char for char, pos in green_constraints)
+            }
 
-        unassigned = [var for var in self.variables if var not in assignment]
-        var = unassigned[0]
-
-        for value in self.domains[var]:
-            local_assignment = assignment.copy()
-            local_assignment[var] = value
-            self.feedback[var] = self.get_feedback(var, value)
-            self.enforce_node_consistency()
-            self.enforce_arc_consistency()
-
-            result = self.backtracking_search(local_assignment)
-            if result:
-                return result
-
-        return None
-
-    def get_feedback(self, variable, guess):
-        """Simulate feedback for a guess."""
-        feedback = []
-        target = self.target_words[self.variables.index(variable)]
-        word_letter_count = defaultdict(int)
-        for char in target:
-            word_letter_count[char] += 1
-
-        # Green feedback
-        for i, char in enumerate(guess):
-            if char == target[i]:
-                feedback.append((char, "green"))
-                word_letter_count[char] -= 1
-
-        # Yellow and Grey feedback
-        for i, char in enumerate(guess):
-            if (char, "green") not in feedback:
-                if word_letter_count[char] > 0:
-                    feedback.append((char, "yellow"))
-                    word_letter_count[char] -= 1
-                else:
-                    feedback.append((char, "grey"))
-
-        return feedback
-
-    def solve(self):
-        """Solve the Quordle puzzle."""
-        self.enforce_node_consistency()
-        self.enforce_arc_consistency()
-        return self.backtracking_search()
-
-
-# Example Integration with UI
-if __name__ == "__main__":
-    # Assume solutions.txt and valid_words.txt are loaded as lists
-    target_words = random.sample(solutions, 4)
-    solver = CSPQuordleSolver(target_words, validWords)
-    solution = solver.solve()
-
-    if solution:
-        print("Solution found:", solution)
-    else:
-        print("No solution found.")
+            # print(f"Domain {i} size after filtering: {len(self.domains[i])}")
+            # print(f"Feedback for domain {i}: {feedback[i]}")
+        return

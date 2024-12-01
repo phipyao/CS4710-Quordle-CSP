@@ -3,6 +3,8 @@ from tkinter import messagebox
 import random
 from pathlib import Path
 
+import cspSolver as solver
+
 # Load words from text files
 def load_words(file_path):
     base_dir = Path(__file__).parent
@@ -14,7 +16,7 @@ def load_words(file_path):
 
 # Load solutions and valid words
 solutions = load_words("solutions.txt")
-validWords = load_words("valid_words.txt")  # Include solutions as valid guesses
+validWords = load_words("solutions.txt")  # Include solutions as valid guesses
 
 class QuordleGame:
     def __init__(self, master):
@@ -23,7 +25,7 @@ class QuordleGame:
 
         # Select random words
         self.target_words = random.sample(solutions, 4)
-        self.attempts = [["" for col in range(4)] for row in range(6)]
+        self.attempts = [["" for col in range(4)] for row in range(9)]
         self.current_row = 0
 
         # Track if each word grid is solved
@@ -50,7 +52,7 @@ class QuordleGame:
         grid_frame.pack()
 
         cells = []
-        for r in range(6):
+        for r in range(9):
             row_cells = []
             for c in range(5):
                 cell = tk.Label(grid_frame, text="", width=2, height=1, font=("Arial", 18), relief="solid", bd=1,
@@ -61,22 +63,55 @@ class QuordleGame:
 
         return cells
 
+# method to give feedback to csp solver instance
+    def get_feedback_for_csp(self, guess):
+        feedback = []
+        for frame_index, frame in enumerate(self.frames):
+            word_feedback = []
+            target_word = self.target_words[frame_index]
+            for i, char in enumerate(guess):
+                if i >= len(target_word):
+                    raise ValueError(f"Target word is too short: '{target_word}'")
+                if char == target_word[i]:
+                    word_feedback.append((char, "green"))
+                elif char in target_word:
+                    word_feedback.append((char, "yellow"))
+                else:
+                    word_feedback.append((char, "grey"))
+            if len(word_feedback) != 5:
+                raise ValueError(f"Malformed feedback for frame {frame_index}: {word_feedback}")
+            feedback.append(word_feedback)
+        return feedback
+
+# modified submit_guess method for csp solver
     def submit_guess(self):
-        guess = self.guess_entry.get().strip().lower()
+        # Generate a guess from the CSP solver
+        guess = solver.generate_next_guess()  # Replace manual input with CSP-generated guess
+
+        # Call the existing submit_guess logic to handle feedback
         if len(guess) != 5:
             messagebox.showerror("Error", "Guess must be a 5-letter word.")
             return
-
         if guess not in validWords:
             messagebox.showerror("Error", "Guess is not in the word list.")
             return
 
+        # Update the game UI
         self.update_grid(guess)
         self.guess_entry.delete(0, tk.END)
 
-        if self.current_row == 6:
-            messagebox.showinfo("Game Over", "You are out of attempts!")
+        # Pass feedback to the CSP solver
+        feedback = self.get_feedback_for_csp(guess)
+        # for i in feedback:
+        #     print(i)
+        solver.update_constraints(feedback)
+
+        # Check if the game is over
+        if self.current_row == 9:
+            if not all(self.solved):
+                messagebox.showinfo("Game Over", "You are out of attempts!")
             return
+
 
     def update_grid(self, guess):
         for frame_index, frame in enumerate(self.frames):
@@ -116,7 +151,7 @@ class QuordleGame:
             # Check if the current grid is solved
             if guess == word:
                 self.solved[frame_index] = True
-                messagebox.showinfo("Congratulations!", f"You solved Word {frame_index + 1}!")
+                # messagebox.showinfo("Congratulations!", f"You solved Word {frame_index + 1}!")
 
         self.current_row += 1
 
@@ -127,5 +162,6 @@ class QuordleGame:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    solver = solver.CSPQuordleSolver()
     game = QuordleGame(root)
     root.mainloop()
