@@ -25,7 +25,7 @@ class QuordleGame:
 
         # Select random words
         self.target_words = random.sample(solutions, 4)
-        self.attempts = [["" for col in range(4)] for row in range(6)]
+        self.attempts = [["" for col in range(4)] for row in range(9)]
         self.current_row = 0
 
         # Track if each word grid is solved
@@ -52,7 +52,7 @@ class QuordleGame:
         grid_frame.pack()
 
         cells = []
-        for r in range(6):
+        for r in range(9):
             row_cells = []
             for c in range(5):
                 cell = tk.Label(grid_frame, text="", width=2, height=1, font=("Arial", 18), relief="solid", bd=1,
