@@ -16,7 +16,7 @@ def load_words(file_path):
 
 # Load solutions and valid words
 solutions = load_words("solutions.txt")
-validWords = load_words("valid_words.txt")  # Include solutions as valid guesses
+validWords = load_words("solutions.txt")  # Include solutions as valid guesses
 
 class QuordleGame:
     def __init__(self, master):
@@ -124,7 +124,7 @@ class QuordleGame:
         solver.update_constraints(feedback)
 
         # Check if the game is over
-        if self.current_row == 6:
+        if self.current_row == 9:
             messagebox.showinfo("Game Over", "You are out of attempts!")
             return
 
@@ -167,7 +167,7 @@ class QuordleGame:
             # Check if the current grid is solved
             if guess == word:
                 self.solved[frame_index] = True
-                messagebox.showinfo("Congratulations!", f"You solved Word {frame_index + 1}!")
+            #     messagebox.showinfo("Congratulations!", f"You solved Word {frame_index + 1}!")
 
         self.current_row += 1
 

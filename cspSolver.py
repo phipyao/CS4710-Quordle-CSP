@@ -1,4 +1,18 @@
 from collections import defaultdict
+from pathlib import Path
+import random
+# Load words from text files
+def load_words(file_path):
+    base_dir = Path(__file__).parent
+    file_address = base_dir / file_path
+    
+    with open(file_address, 'r') as file:
+        return [line.strip().lower() for line in file if line.strip()]
+
+
+# Load solutions and valid words
+solutions = load_words("solutions.txt")
+validWords = load_words("solutions.txt")  # Include solutions as valid guesses
 
 class CSPQuordleSolver:
     def __init__(self, target_words, valid_words):
