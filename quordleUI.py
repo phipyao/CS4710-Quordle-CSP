@@ -83,24 +83,6 @@ class QuordleGame:
             feedback.append(word_feedback)
         return feedback
 
-# old submit_guess method
-    # def submit_guess(self):
-    #     guess = self.guess_entry.get().strip().lower()
-    #     if len(guess) != 5:
-    #         messagebox.showerror("Error", "Guess must be a 5-letter word.")
-    #         return
-
-    #     if guess not in validWords:
-    #         messagebox.showerror("Error", "Guess is not in the word list.")
-    #         return
-
-    #     self.update_grid(guess)
-    #     self.guess_entry.delete(0, tk.END)
-
-    #     if self.current_row == 6:
-    #         messagebox.showinfo("Game Over", "You are out of attempts!")
-    #         return
-
 # modified submit_guess method for csp solver
     def submit_guess(self):
         # Generate a guess from the CSP solver
@@ -110,7 +92,6 @@ class QuordleGame:
         if len(guess) != 5:
             messagebox.showerror("Error", "Guess must be a 5-letter word.")
             return
-
         if guess not in validWords:
             messagebox.showerror("Error", "Guess is not in the word list.")
             return
@@ -121,11 +102,14 @@ class QuordleGame:
 
         # Pass feedback to the CSP solver
         feedback = self.get_feedback_for_csp(guess)
+        # for i in feedback:
+        #     print(i)
         solver.update_constraints(feedback)
 
         # Check if the game is over
         if self.current_row == 9:
-            messagebox.showinfo("Game Over", "You are out of attempts!")
+            if not all(self.solved):
+                messagebox.showinfo("Game Over", "You are out of attempts!")
             return
 
 
@@ -167,7 +151,7 @@ class QuordleGame:
             # Check if the current grid is solved
             if guess == word:
                 self.solved[frame_index] = True
-            #     messagebox.showinfo("Congratulations!", f"You solved Word {frame_index + 1}!")
+                # messagebox.showinfo("Congratulations!", f"You solved Word {frame_index + 1}!")
 
         self.current_row += 1
 
@@ -178,6 +162,6 @@ class QuordleGame:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    solver = solver.CSPQuordleSolver(target_words=random.sample(solutions, 4), valid_words=validWords)
+    solver = solver.CSPQuordleSolver()
     game = QuordleGame(root)
     root.mainloop()
