@@ -86,7 +86,11 @@ class QuordleGame:
 # modified submit_guess method for csp solver
     def submit_guess(self):
         # Generate a guess from the CSP solver
-        guess = solver.generate_next_guess()  # Replace manual input with CSP-generated guess
+       
+
+        guess = self.guess_entry.get().strip().lower()
+        if not guess:
+            guess = solver.generate_next_guess() # Replace manual input with CSP-generated guess if there is no manual guess
 
         # Call the existing submit_guess logic to handle feedback
         if len(guess) != 5:
@@ -105,6 +109,7 @@ class QuordleGame:
         # for i in feedback:
         #     print(i)
         solver.update_constraints(feedback)
+        print(f"Domain sizes: {[len(solver.domains[i]) for i in range(4)]}")
 
         # Check if the game is over
         if self.current_row == 9:
