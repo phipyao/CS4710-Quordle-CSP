@@ -1,10 +1,6 @@
 from collections import Counter
 
-def find_best_starting_words(filename, top_n=100):
-    # Step 1: Read all words from the file
-    with open(filename, "r") as file:
-        words = [line.strip() for line in file]
-
+def find_best_starting_words(words, top_n=100):
     # Step 2: Calculate letter frequencies for each position
     position_frequencies = [Counter() for _ in range(5)]
     for word in words:
@@ -36,8 +32,19 @@ def find_best_starting_words(filename, top_n=100):
 
 
 if __name__ == "__main__":
-    # Usage
+    from pathlib import Path
+
+    def load_words(file_path):
+        base_dir = Path(__file__).parent
+        file_address = base_dir / file_path
+        
+        with open(file_address, 'r') as file:
+            return [line.strip().lower() for line in file if line.strip()]
+
+
+    # Load solutions and find valid words
+    solutions = load_words("solutions.txt")
     n = 30
-    top_words = find_best_starting_words("solutions.txt", n)
+    top_words = find_best_starting_words(solutions, n)
     print(f"Top {n} Best Starting Words:")
     print(top_words)

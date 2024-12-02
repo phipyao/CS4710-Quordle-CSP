@@ -1,6 +1,7 @@
 from collections import defaultdict
 from pathlib import Path
 import random
+from startingWords import find_best_starting_words
 
 # Load words from text files
 def load_words(file_path):
@@ -24,7 +25,10 @@ class CSPQuordleSolver:
     
     def generate_next_guess(self):
         if len(self.used_guesses) == 0:
-            guess = random.choice(list(set(validWords)))
+            # guess = random.choice(list(set(validWords)))
+            # print(find_best_starting_words(list(set(validWords)), 4))
+            # guess = random.choice(find_best_starting_words(list(set(validWords)), 4))
+            guess = find_best_starting_words(list(set(validWords)), 1)[0]
         
         # Return a domain if it is solved
         single_domain = next((domain for domain in self.domains.values() if len(domain) == 1), None)
@@ -50,7 +54,7 @@ class CSPQuordleSolver:
 
             max_domains = max(word_count.values(), default=0)
             most_common_words = [word for word, count in word_count.items() if count == max_domains]
-            guess = random.choice(most_common_words) if most_common_words else random.choice(list(set(validWords)))
+            guess = find_best_starting_words(most_common_words, 1)[0] if most_common_words else find_best_starting_words(list(set(validWords)), 1)[0]
 
         # Remove the guess from the domains
         for i in range(4):
@@ -144,6 +148,7 @@ def simulate_solver():
 if __name__ == "__main__":
 
     import sys
+    from tqdm import tqdm
 
     # Get the number of games from the command-line arguments
     if len(sys.argv) > 1:
@@ -158,6 +163,7 @@ if __name__ == "__main__":
         games = 100  # Default number of games if no input is provided
     
     results = []
-    for i in range(games):
+    for i in tqdm(range(games), desc="Simulating", unit="game"):
         results.append(simulate_solver())
+
     print(f"Results: {sum(results)}/{games} games won")
