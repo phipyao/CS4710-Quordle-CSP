@@ -112,13 +112,22 @@ class QuordleGame:
         print(f"Domain sizes: {[len(solver.domains[i]) for i in range(4)]}")
 
         # Check if the game is over
-        if self.current_row == 9:
-            if not all(self.solved):
-                messagebox.showinfo("Game Over", "You are out of attempts!")
-            return
+        # if self.current_row == 9:
+        #     if not all(self.solved):
+        #         messagebox.showinfo("Game Over", "You are out of attempts!")
+        #     return
 
 
     def update_grid(self, guess):
+
+        # Check if the game is over
+        if all(self.solved):
+            messagebox.showinfo("Congratulations!", "You solved all the words!")
+            self.master.destroy()
+        elif self.current_row == 9:
+            messagebox.showinfo("Game Over", "You are out of attempts!")
+            self.master.destroy()
+
         for frame_index, frame in enumerate(self.frames):
             if self.solved[frame_index]:
                 continue  # Skip if the word grid is already solved
