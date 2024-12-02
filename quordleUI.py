@@ -156,8 +156,8 @@ class QuordleGame:
         self.current_row += 1
 
         # Check if all words are guessed correctly
-        if all(self.solved):
-            messagebox.showinfo("Congratulations!", "You solved all the words!")
+        # if all(self.solved):
+        #     messagebox.showinfo("Congratulations!", "You solved all the words!")
 
 
 if __name__ == "__main__":
