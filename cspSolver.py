@@ -100,7 +100,7 @@ class CSPQuordleSolver:
         # print(f"Domain sizes: {[len(self.domains[i]) for i in range(4)]}")
         return
     
-def simulate_solver():
+def simulate_solver(guesses=9):
     """Simulate the CSP solver for a Quordle game."""
     # Step 1: Randomly select target words
     target_words = random.sample(solutions, 4)
@@ -110,7 +110,7 @@ def simulate_solver():
     solver = CSPQuordleSolver()
 
     # Step 3: Simulate the game
-    for attempt in range(9):
+    for attempt in range(guesses):
         # Generate a guess
         guess = solver.generate_next_guess()
 
@@ -139,11 +139,18 @@ def simulate_solver():
         if all(len(solver.domains[i]) == 0 for i in range(4)):
             # print("Solver successfully solved all words!")
             # print(f"Solved words: {target_words}")
-            return 1
+            return (1, 1, 1, 1)
 
     # print("Solver failed to solve all words within 9 attempts.")
     # print(f"Unsolved target words: {target_words}")
-    return 0
+    solved_wordcount = sum(len(solver.domains[i]) == 0 for i in range(4))
+    if solved_wordcount == 3:
+        return (0, 1, 1, 1)
+    elif solved_wordcount == 2:
+        return (0, 0, 1, 1)
+    elif solved_wordcount == 1:
+        return (0, 0, 0, 1)
+    return (0, 0, 0, 0)
 
 if __name__ == "__main__":
 
@@ -162,8 +169,22 @@ if __name__ == "__main__":
     else:
         games = 100  # Default number of games if no input is provided
     
+    if len(sys.argv) > 2:
+        try:
+            guesses = int(sys.argv[2])
+            if guesses <= 0:
+                raise ValueError("Number of guesses must be a positive integer.")
+        except ValueError as e:
+            print(f"Invalid input for number of guesses: {e}")
+            sys.exit(1)
+    else:
+        guesses = 9
+    
     results = []
     for i in tqdm(range(games), desc="Simulating", unit="game"):
-        results.append(simulate_solver())
+        results.append(simulate_solver(guesses))
 
-    print(f"Results: {sum(results)}/{games} games won")
+    print(f"Results: {sum(r[0] for r in results)}/{games} games won")
+    print(f"{sum(r[1] for r in results)}/{games} games solved 3 words")
+    print(f"{sum(r[2] for r in results)}/{games} games solved 2 words")
+    print(f"{sum(r[3] for r in results)}/{games} games solved 1 word")
