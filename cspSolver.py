@@ -28,7 +28,7 @@ class CSPQuordleSolver:
             # guess = random.choice(list(set(validWords)))
             # print(find_best_starting_words(list(set(validWords)), 4))
             # guess = random.choice(find_best_starting_words(list(set(validWords)), 4))
-            guess = find_best_starting_words(list(set(validWords)), 1)[0]
+            guess = 'slate'
         
         # Return a domain if it is solved
         single_domain = next((domain for domain in self.domains.values() if len(domain) == 1), None)
